@@ -1,0 +1,135 @@
+//SEGMENT TREE;
+class SegTree {
+    vector<int> tree;
+    vector<int> lazy;
+
+public:
+    SegTree(int n) {
+        tree.resize(4 * n + 1, 0);
+        lazy.resize(4 * n + 1, 0);
+    }
+
+    void buildTree(int node, int start, int end , vector<int>&A){
+
+        if(start==end){
+            tree[node] = A[end];
+            return;
+        }
+
+        int mid = (start+end)/2;
+
+        buildTree(2*node, start, mid,A);
+        buildTree(2*node+1, mid+1, end,A);
+
+        tree[node] = (tree[2*node] + tree[2*node+1]);
+    }
+
+    void updateTree(int node, int start, int end, int idx, int val){
+
+        if(start==end){
+            tree[node] = val;
+            return;
+        }
+
+        int mid = (start+end)/2;
+
+        if(idx<=mid)
+            updateTree(2*node, start, mid, idx, val);
+        else
+            updateTree(2*node+1, mid+1, end, idx, val);
+
+        tree[node] = tree[2*node] + tree[2*node+1];
+    }
+
+    int query(int node, int start, int end, int L, int R){
+
+    // The Range which we are currently in : [start, end]
+    // The Range of which we have to compute the answer : [L, R]
+        
+    // Outside Range
+        if( R<start || L>end )
+        return 0; // need to return something that can be avoided
+
+    // In Range
+    if( start>=L && end<=R )
+        return tree[node];
+
+    // Partial Overlap
+    int mid = (start+end)/2;
+    int leftans = query(2*node, start, mid, L, R);
+    int rightans = query(2*node+1, mid+1, end, L, R);
+
+    return (leftans + rightans); // do whatever operation you want to do
+}
+
+void updateRange(int node, int start, int end, int l, int r, int val) {
+        // update the previous remaining updates 
+        // and propogate downwards 
+    if(lazy[node] != 0) {
+        tree[node] += (end - start + 1) * lazy[node]; 
+            // propogate the lazy update downwards
+            // for the remaining nodes to get updated 
+        if(start != end) {
+            lazy[2*node] += lazy[node]; 
+            lazy[2*node+1] += lazy[node]; 
+        }
+
+        lazy[node] = 0; 
+    }
+
+        // no overlap 
+        // we don't do anything and return 
+        // start end l r or l r start end 
+    if(end < l or r < start) {
+        return; 
+    }
+
+        // complete overlap 
+        // l start end r 
+    if(start>=l && end <= r) {
+        tree[node] += (end - start + 1) * val; 
+            // if a leaf node, it will have childrens
+        if(start != end) {
+            lazy[2*node] += val; 
+            lazy[2*node+1] += val; 
+        }
+        return; 
+    }
+        // last case has to be no overlap case
+    int mid = (start + end) >> 1; 
+    updateRange(2*node, start, mid, l, r, val);
+    updateRange(2*node+1, mid+1, end, l, r, val); 
+    tree[node] = tree[2*node] + tree[2*node+1]; 
+}
+
+int queryRange(int node, int start, int end, int l, int r) {
+
+        // update if any updates are remaining 
+        // as the node will stay fresh and updated 
+    if(lazy[node] != 0) {
+        tree[node] += (end - start + 1) * lazy[node]; 
+            // propogate the lazy update downwards
+            // for the remaining nodes to get updated 
+        if(start != end) {
+            lazy[2*node] += lazy[node]; 
+            lazy[2*node+1] += lazy[node]; 
+        }
+
+        lazy[node] = 0; 
+    }
+
+        // no overlap return 0; 
+    if(end < l or r < start) {
+        return 0; 
+    }
+
+        // complete overlap 
+    if(start>=l && end <= r) return tree[node]; 
+
+    int mid = (start + end) >> 1; 
+    int left = queryRange(2*node, start, mid, l, r);
+    int right = queryRange(2*node+1, mid+1, end, l, r);
+    return left + right; 
+}
+
+};
