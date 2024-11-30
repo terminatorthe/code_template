@@ -1,0 +1,60 @@
+//BINARY LIFTING
+
+const int maxN = 22;
+const int maxSize = 200005;
+
+int depth[maxSize];
+int dp[maxSize][maxN];
+vector<int> g[maxSize];
+
+void dfs(int node, int par) {
+    dp[node][0] = par; // 0th parent
+    for (auto child : g[node]) {
+        if (child == par) continue;
+        depth[child] = depth[node] + 1;
+        dfs(child, node);
+    }
+}
+
+void init(int n) {
+    for (int j = 1; j < maxN; j++) {
+        for (int i = 1; i <= n; i++) {
+            if (dp[i][j - 1] != -1) {
+                int par = dp[i][j - 1];
+                dp[i][j] = dp[par][j - 1];
+            }
+        }
+    }
+}
+
+int LCA(int a, int b) {
+    if (depth[a] > depth[b]) {
+        swap(a, b);
+    }
+    int diff = depth[b] - depth[a];
+
+   while(diff>0){
+     int ct = log2(diff);
+     b = dp[b][ct];
+     diff -= (1<<ct);
+   }
+
+    if (a == b) return a;
+
+    for (int i = maxN-1; i >= 0; i--) {
+        if (dp[a][i] != -1 && dp[a][i] != dp[b][i]) {
+            a = dp[a][i];
+            b = dp[b][i];
+        }
+    }
+    return dp[a][0];
+}
+void reset(){
+    for(int i = 0;i<maxSize;i+=1){
+        depth[i] = 1;
+        for(int j = 0;j<maxN;j+=1){
+            dp[i][j] = -1;
+        }
+    }
+
+}
